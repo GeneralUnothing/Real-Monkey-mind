@@ -5,7 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
+import sys
 from dotenv import load_dotenv
+
+# Ensure the current directory is in the path so 'app' module can be found
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 load_dotenv()
 
