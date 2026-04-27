@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: monkeymind-ai
+    env: docker
+    region: ohio
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: WEB_CONCURRENCY
+        value: 1
+      - fromGroup: monkeymind-secrets
+
+envVarGroups:
+  - name: monkeymind-secrets
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false

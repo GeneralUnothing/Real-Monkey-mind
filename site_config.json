@@ -1,0 +1,32 @@
+{
+  "site_title": "MonkeyMind AI",
+  "tagline": "Your intelligent study companion",
+  "logo_emoji": "\ud83d\udc12",
+  "accent_color": "#bf88d8",
+  "bg_color": "#284c0b",
+  "hero_text": "",
+  "hero_subtext": "",
+  "announcement": "",
+  "announcement_enabled": false,
+  "announcement_color": "",
+  "features_section": [
+    {
+      "icon": "\ud83e\udde0",
+      "title": "AI Study Assistant",
+      "desc": "Ask @monky anything, anytime"
+    },
+    {
+      "icon": "\ud83d\udcda",
+      "title": "Smart Flashcards",
+      "desc": "Spaced repetition that actually works"
+    },
+    {
+      "icon": "\ud83d\udc65",
+      "title": "Study Groups",
+      "desc": "Collaborate and learn together"
+    }
+  ],
+  "footer_text": "",
+  "show_streak": true,
+  "show_gpa": true
+}
