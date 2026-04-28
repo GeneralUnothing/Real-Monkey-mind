@@ -17,10 +17,9 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # ── Python dependencies (own layer for caching) ───────────────────────────────
-COPY requirements.txt pyproject.toml ./
+COPY requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir -e .
+    && pip install --no-cache-dir -r requirements.txt
 
 # ── Application source ────────────────────────────────────────────────────────
 COPY --chown=appuser:appgroup . .
