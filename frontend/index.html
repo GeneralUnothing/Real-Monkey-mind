@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonkeyMind AI — Your AI Study Partner</title>
+    <meta name="description" content="MonkeyMind AI is your intelligent academic assistant. Chat, create flashcards, generate quizzes, track study streaks and schedules.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Global Announcement Banner -->
+    <div id="global-announcement" class="hidden" style="background: var(--accent); color: #000; text-align: center; padding: 10px; font-weight: 600; font-size: 0.9rem; z-index: 9999; position: relative;"></div>
+
+    <!-- ===== LOGIN PAGE ===== -->
+    <div id="login-page" class="page-overlay">
+        <div class="login-bg">
+            <div class="login-orb orb-1"></div>
+            <div class="login-orb orb-2"></div>
+            <div class="login-orb orb-3"></div>
+        </div>
+        <div class="login-card">
+            <div class="login-logo">
+                <span class="logo-icon">🐒</span>
+                <h1>MonkeyMind AI</h1>
+                <p>Your intelligent study companion</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
+                <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Sign Up</button>
+            </div>
+
+            <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label><i class="fa-solid fa-envelope"></i> Email</label>
+                    <input type="text" id="login-email" placeholder="you@example.com or Username" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fa-solid fa-lock"></i> Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-auth">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sign In
+                </button>
+                <div class="auth-divider"><span>or</span></div>
+                <button type="button" class="btn-auth btn-demo" onclick="handleDemoLogin()">
+                    <i class="fa-solid fa-flask"></i> Continue as Demo User
+                </button>
+            </form>
+
+            <form id="register-form" class="auth-form hidden" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label><i class="fa-solid fa-user"></i> Full Name</label>
+                    <input type="text" id="reg-name" placeholder="Jane Doe" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fa-solid fa-envelope"></i> Email</label>
+                    <input type="email" id="reg-email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fa-solid fa-lock"></i> Password</label>
+                    <input type="password" id="reg-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-auth">
+                    <i class="fa-solid fa-user-plus"></i> Create Account
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MAIN APP ===== -->
+    <div id="main-app" class="hidden">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span>🐒</span>
+                    <h2>MonkeyMind</h2>
+                </div>
+                <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+
+            <ul class="nav-links" id="nav-links">
+                <li class="nav-item active" data-view="dashboard-view" onclick="navigate('dashboard-view', this)">
+                    <i class="fa-solid fa-house"></i> <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-view="chat-view" onclick="navigate('chat-view', this)">
+                    <i class="fa-solid fa-message"></i> <span>AI Assistant</span>
+                </li>
+                <li class="nav-item" data-view="flashcards-view" onclick="navigate('flashcards-view', this)">
+                    <i class="fa-solid fa-layer-group"></i> <span>Flashcards</span>
+                </li>
+                <li class="nav-item" data-view="turbo-view" onclick="navigate('turbo-view', this)">
+                    <i class="fa-solid fa-bolt"></i> <span>Monkey Learning</span>
+                </li>
+                <li class="nav-item" data-view="notes-view" onclick="navigate('notes-view', this)">
+                    🐒📝 <span>Notes</span>
+                </li>
+                <li class="nav-item" data-view="social-view" onclick="navigate('social-view', this)">
+                    <i class="fa-solid fa-users"></i> <span>Study Groups</span>
+                </li>
+                <li class="nav-item" data-view="schedule-view" onclick="navigate('schedule-view', this)">
+                    <i class="fa-solid fa-calendar-days"></i> <span>Schedule</span>
+                </li>
+                <li class="nav-item" data-view="streak-view" onclick="navigate('streak-view', this)">
+                    <i class="fa-solid fa-fire"></i> <span>Streaks</span>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar" id="user-avatar-sidebar">J</div>
+                    <div class="user-info">
+                        <span class="user-name" id="sidebar-username">User</span>
+                        <span class="user-role">Student</span>
+                    </div>
+                    <button class="logout-btn" onclick="handleLogout()" title="Sign Out">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- ===== MOBILE BOTTOM NAV ===== -->
+        <nav class="mobile-nav" id="mobile-nav">
+            <div class="mobile-nav-item active" id="mnav-dashboard" onclick="mobileNavigate('dashboard-view', this)">
+                <i class="fa-solid fa-house"></i><span>Home</span>
+            </div>
+            <div class="mobile-nav-item" id="mnav-chat" onclick="mobileNavigate('chat-view', this)">
+                <i class="fa-solid fa-message"></i><span>AI Chat</span>
+            </div>
+            <div class="mobile-nav-item" id="mnav-flashcards" onclick="mobileNavigate('flashcards-view', this)">
+                <i class="fa-solid fa-layer-group"></i><span>Cards</span>
+            </div>
+            <div class="mobile-nav-item" id="mnav-turbo" onclick="mobileNavigate('turbo-view', this)">
+                <i class="fa-solid fa-bolt"></i><span>Learn</span>
+            </div>
+            <div class="mobile-nav-item" id="mnav-more" onclick="toggleMobileMore()">
+                <i class="fa-solid fa-ellipsis"></i><span>More</span>
+            </div>
+        </nav>
+
+        <!-- Mobile "More" drawer -->
+        <div class="mobile-more-drawer" id="mobile-more-drawer">
+            <div class="mobile-more-item" id="mnav-notes" onclick="mobileNavigate('notes-view', document.getElementById('mnav-more')); closeMobileMore()">
+                <i class="fa-solid fa-note-sticky"></i> Notes
+            </div>
+            <div class="mobile-more-item" id="mnav-social" onclick="mobileNavigate('social-view', document.getElementById('mnav-more')); closeMobileMore()">
+                <i class="fa-solid fa-users"></i> Study Groups
+            </div>
+            <div class="mobile-more-item" id="mnav-schedule" onclick="mobileNavigate('schedule-view', document.getElementById('mnav-more')); closeMobileMore()">
+                <i class="fa-solid fa-calendar-days"></i> Schedule
+            </div>
+            <div class="mobile-more-item" id="mnav-streak" onclick="mobileNavigate('streak-view', document.getElementById('mnav-more')); closeMobileMore()">
+                <i class="fa-solid fa-fire"></i> Streaks
+            </div>
+            <div class="mobile-more-item" onclick="handleLogout(); closeMobileMore()">
+                <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content" id="main-content">
+
+            <!-- === DASHBOARD VIEW === -->
+            <section id="dashboard-view" class="view active-view">
+                <div class="view-header-bar">
+                    <div>
+                        <h1 id="dash-greeting">Good morning! 👋</h1>
+                        <p id="dash-subtext">You're on a <strong id="dash-streak">0</strong>-day streak. Keep it up!</p>
+                    </div>
+                    <div class="header-actions">
+                        <div class="date-badge"><i class="fa-solid fa-calendar"></i> <span id="dash-date"></span></div>
+                    </div>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="navigate('streak-view', document.querySelector('[data-view=streak-view]'))">
+                        <div class="stat-icon fire"><i class="fa-solid fa-fire"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-streak">0</span>
+                            <span class="stat-label">Day Streak</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" onclick="navigate('flashcards-view', document.querySelector('[data-view=flashcards-view]'))">
+                        <div class="stat-icon cards"><i class="fa-solid fa-layer-group"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-cards">0</span>
+                            <span class="stat-label">Flashcards</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" onclick="navigate('notes-view', document.querySelector('[data-view=notes-view]'))">
+                        <div class="stat-icon notes">🐒📝</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-notes">0</span>
+                            <span class="stat-label">Notes Saved</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" onclick="navigate('schedule-view', document.querySelector('[data-view=schedule-view]'))">
+                        <div class="stat-icon schedule"><i class="fa-solid fa-calendar-check"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-sessions">0</span>
+                            <span class="stat-label">Sessions Today</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions + Recent Activity -->
+                <div class="dash-lower-grid">
+                    <div class="dash-panel">
+                        <h3><i class="fa-solid fa-zap"></i> Quick Actions</h3>
+                        <div class="quick-actions">
+                            <button class="qa-btn" onclick="navigate('chat-view', document.querySelector('[data-view=chat-view]'))">
+                                <i class="fa-solid fa-message"></i> Ask AI
+                            </button>
+                            <button class="qa-btn" onclick="navigate('flashcards-view', document.querySelector('[data-view=flashcards-view]')); setTimeout(()=>document.getElementById('btn-create-card').click(),300)">
+                                <i class="fa-solid fa-plus"></i> New Flashcard
+                            </button>
+                            <button class="qa-btn" onclick="navigate('turbo-view', document.querySelector('[data-view=turbo-view]'))">
+                                <i class="fa-solid fa-bolt"></i> Monkey Learning
+                            </button>
+                            <button class="qa-btn" onclick="navigate('notes-view', document.querySelector('[data-view=notes-view]')); setTimeout(()=>document.getElementById('btn-new-note').click(),300)">
+                                <i class="fa-solid fa-pen"></i> New Note
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="dash-panel">
+                        <h3><i class="fa-solid fa-clock-rotate-left"></i> Today's Schedule</h3>
+                        <div id="dash-schedule-preview" class="schedule-preview-list">
+                            <p class="empty-state">No sessions planned for today. <a onclick="navigate('schedule-view', document.querySelector('[data-view=schedule-view]'))" class="link-action">Add one →</a></p>
+                        </div>
+                    </div>
+
+                    <div class="dash-panel">
+                        <h3><i class="fa-solid fa-fire-flame-curved"></i> Streak Calendar</h3>
+                        <div id="dash-streak-mini" class="streak-mini-calendar"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- === CHAT VIEW === -->
+            <section id="chat-view" class="view hidden-view">
+                <div class="view-header-bar">
+                    <div>
+                        <h1><i class="fa-solid fa-message"></i> AI Study Assistant</h1>
+                        <p>Ask questions, get explanations, or explore any topic.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-secondary" onclick="clearChat()"><i class="fa-solid fa-trash"></i> Clear</button>
+                    </div>
+                </div>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message ai-message">
+                            <div class="msg-avatar ai">🐒</div>
+                            <div class="msg-bubble">
+                        <p>🐒 <strong>MonkeyMind online.</strong> Technically a genius, visually a monkey.<br><br>I learned everything from Stack Overflow at 3am and I <em>will</em> roast my own answers. Ask me anything — math, code, science, history. I'll get it right. Probably. <em>The compiler agrees with me 70% of the time.</em></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <div class="chat-suggestions">
+                            <button onclick="quickMessage('Explain photosynthesis like I have the attention span of a monkey')">🌿 Photosynthesis</button>
+                            <button onclick="quickMessage('Why does the Pythagorean theorem actually work? Prove it to me aggressively.')">📐 Pythagorean proof</button>
+                            <button onclick="quickMessage('Give me 5 brutal study tips that actually work, no fluff')">🔥 Study tips</button>
+                            <button onclick="quickMessage('What is Big O notation and why should I care?')">⚡ Big O</button>
+                        </div>
+                        <form id="chat-form" onsubmit="sendMessage(event)">
+                            <textarea id="chat-input" placeholder="Type your message... (Shift+Enter for new line)" rows="1" required></textarea>
+                            <button type="submit" id="send-btn">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- === FLASHCARDS VIEW === -->
+            <section id="flashcards-view" class="view hidden-view">
+                <div class="view-header-bar">
+                    <div>
+                        <h1><i class="fa-solid fa-layer-group"></i> Flashcards</h1>
+                        <p>Create, review, and master your flashcards.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-primary" id="btn-create-card" onclick="toggleCardForm()">
+                            <i class="fa-solid fa-plus"></i> New Card
+                        </button>
+                    </div>
+                </div>
+
+                <div class="create-card-form hidden" id="create-card-container">
+                    <div class="form-card">
+                        <h3><i class="fa-solid fa-pen-to-square"></i> Create Flashcard</h3>
+                        <form id="new-card-form" onsubmit="createFlashcard(event)">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Question</label>
+                                    <textarea id="fc-question" rows="2" required placeholder="What is the capital of France?"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Answer</label>
+                                    <textarea id="fc-answer" rows="2" required placeholder="Paris"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <input type="text" id="fc-subject" placeholder="e.g. Geography">
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn-secondary" onclick="toggleCardForm()">Cancel</button>
+                                <button type="submit" class="btn-primary">Save Card</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="flashcards-layout" style="display: flex; gap: 20px; height: calc(100vh - 160px);">
+                    <!-- Sets Sidebar -->
+                    <div class="flashcard-sets-sidebar" style="width: 250px; background: var(--surface-light); border-radius: var(--radius); padding: 15px; border: 1px solid var(--border); overflow-y: auto;">
+                        <h3 style="margin-bottom: 15px; font-size: 1rem; color: var(--text-dim);">Your Sets</h3>
+                        <div id="flashcard-sets-list" style="display: flex; flex-direction: column; gap: 8px;">
+                            <div class="set-item active" onclick="filterCardsBySet('All')" style="padding: 10px; border-radius: 8px; cursor: pointer; background: var(--accent); color: #000; font-weight: bold;">All Cards</div>
+                        </div>
+                    </div>
+
+                    <!-- Cards Area -->
+                    <div class="flashcards-main-area" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                        <div class="flashcards-toolbar" style="margin-bottom: 15px;">
+                            <input type="text" id="fc-search" placeholder="Search cards in this set..." oninput="filterCards()">
+                            <div class="view-toggle">
+                                <button id="view-grid-btn" class="active" onclick="setCardView('grid')"><i class="fa-solid fa-grip"></i></button>
+                                <button id="view-study-btn" onclick="setCardView('study')"><i class="fa-solid fa-eye"></i></button>
+                            </div>
+                        </div>
+
+                        <div id="flashcards-grid-view" style="flex: 1; overflow-y: auto;">
+                            <div class="flashcards-grid" id="flashcards-container">
+                                <div class="loading-state"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading flashcards...</div>
+                            </div>
+                        </div>
+
+                <div id="flashcards-study-view" class="hidden">
+                    <div class="study-mode-container">
+                        <div class="study-card-wrapper">
+                            <div class="study-card" id="study-card" onclick="flipStudyCard()">
+                                <div class="study-card-inner" id="study-card-inner">
+                                    <div class="study-card-front">
+                                        <span class="card-label">QUESTION</span>
+                                        <p id="study-question-text">No cards to study!</p>
+                                    </div>
+                                    <div class="study-card-back">
+                                        <span class="card-label">ANSWER</span>
+                                        <p id="study-answer-text"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="flip-hint"><i class="fa-solid fa-hand-pointer"></i> Click card to reveal answer</p>
+                        </div>
+                        <div class="study-controls">
+                            <button class="btn-secondary" onclick="prevStudyCard()"><i class="fa-solid fa-chevron-left"></i> Prev</button>
+                            <span id="study-counter" class="study-counter">1 / 1</span>
+                            <button class="btn-primary" onclick="nextStudyCard()">Next <i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+                    </div> <!-- End Cards Area -->
+                </div> <!-- End Layout -->
+            </section>
+
+            <!-- === MONKEY LEARNING VIEW === -->
+            <section id="turbo-view" class="view hidden-view">
+                <div class="view-header-bar">
+                    <div>
+                        <h1><i class="fa-solid fa-bolt" style="color:#f39c12"></i> Monkey Learning</h1>
+                        <p>Generate study notes and quizzes from any content</p>
+                    </div>
+                </div>
+
+                <div class="turbo-grid">
+
+                    <!-- ── Panel 1: YouTube to Notes ── -->
+                    <div class="turbo-panel">
+                        <div class="turbo-panel-head">
+                            <span class="turbo-icon" style="background:rgba(231,76,60,.15)">
+                                <i class="fa-brands fa-youtube" style="color:#e74c3c"></i>
+                            </span>
+                            <div>
+                                <h2>YouTube → Notes</h2>
+                                <p>Paste a video URL. Get structured study notes instantly.</p>
+                            </div>
+                        </div>
+
+                        <div class="turbo-panel-body">
+                            <form id="url-notes-form" onsubmit="generateNotes(event)" class="turbo-form">
+                                <div class="form-group">
+                                    <label><i class="fa-solid fa-link"></i> YouTube URL</label>
+                                    <input type="url" id="yt-url"
+                                        placeholder="https://youtube.com/watch?v=..." required>
+                                </div>
+                                <button type="submit" class="btn-primary turbo-submit-btn" id="btn-yt-notes">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Notes
+                                </button>
+                            </form>
+
+                            <div class="turbo-result hidden" id="notes-result"></div>
+                        </div>
+                    </div>
+
+                    <!-- ── Panel 2: AI Quiz Generator ── -->
+                    <div class="turbo-panel">
+                        <div class="turbo-panel-head">
+                            <span class="turbo-icon" style="background:rgba(52,152,219,.15)">
+                                <i class="fa-solid fa-clipboard-question" style="color:#3498db"></i>
+                            </span>
+                            <div>
+                                <h2>AI Quiz Generator</h2>
+                                <p>Paste your notes or any topic. Get an interactive quiz.</p>
+                            </div>
+                        </div>
+
+                        <div class="turbo-panel-body">
+                            <form id="quiz-form" onsubmit="generateQuiz(event)" class="turbo-form">
+                                <div class="form-group">
+                                    <label><i class="fa-solid fa-file-lines"></i> Topic or Notes</label>
+                                    <textarea id="quiz-content" rows="4"
+                                        placeholder="Paste notes, a paragraph, or just a topic name. e.g. 'Photosynthesis in plants'" required></textarea>
+                                </div>
+                                <div class="turbo-options-row">
+                                    <div class="form-group">
+                                        <label><i class="fa-solid fa-list-ol"></i> Questions</label>
+                                        <input type="number" id="quiz-num" value="5" min="3" max="10">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fa-solid fa-gauge"></i> Difficulty</label>
+                                        <select id="quiz-difficulty">
+                                            <option value="easy">Easy</option>
+                                            <option value="medium" selected>Medium</option>
+                                            <option value="hard">Hard</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn-primary turbo-submit-btn" id="btn-generate-quiz">
+                                    <i class="fa-solid fa-play"></i> Generate Quiz
+                                </button>
+                            </form>
+
+                            <div class="turbo-result hidden" id="quiz-result">
+                                <div id="quiz-questions-container"></div>
+                                <div class="quiz-action-row">
+                                    <button class="btn-primary" id="btn-check-quiz"
+                                        onclick="checkQuizAnswers()" style="display:none">
+                                        <i class="fa-solid fa-circle-check"></i> Check Answers
+                                    </button>
+                                </div>
+                                <div id="quiz-score-result" class="quiz-score hidden"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+
+            <!-- === NOTES VIEW === -->
+            <section id="notes-view" class="view hidden-view">
+                <div class="view-header-bar">
+                    <div>
+                        <h1>🐒📝 My Notes</h1>
+                        <p>Save and organize all your study notes in one place.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-primary" id="btn-new-note" onclick="openNoteEditor()">
+                            <i class="fa-solid fa-plus"></i> New Note
+                        </button>
+                    </div>
+                </div>
+
+                <div class="notes-layout">
+                    <!-- Notes List -->
+                    <div class="notes-sidebar" id="notes-list-panel">
+                        <input type="text" id="notes-search" placeholder="Search notes..." oninput="filterNotes()">
+                        <div class="notes-list" id="notes-list">
+                            <p class="empty-state">No notes yet. Create your first note!</p>
+                        </div>
+                    </div>
+
+                    <!-- Note Editor -->
+                    <div class="note-editor-panel" id="note-editor-panel">
+                        <div class="note-editor-placeholder" id="note-placeholder">
+                            <div style="font-size:3rem; color:var(--text-muted); margin-bottom: 15px;">🐒📝</div>
+                            <p>Select a note or create a new one</p>
+                        </div>
+                        <div class="note-editor hidden" id="note-editor">
+                            <div class="note-editor-toolbar">
+                                <input type="text" id="note-title-input" placeholder="Note title..." class="note-title-field">
+                                <div class="note-actions">
+                                    <button class="btn-secondary" onclick="extractFlashcardsFromNote()" id="btn-extract-flashcards" title="Generate AI Flashcards from this note" style="background:var(--accent); color:#000;">
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Cards
+                                    </button>
+                                    <input type="text" id="note-subject-input" placeholder="Subject">
+                                    <button class="btn-primary" onclick="saveNote()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+                                    <button class="btn-secondary" onclick="exportNoteToPDF()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                                    <button class="btn-secondary" onclick="deleteCurrentNote()"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <textarea id="note-body" class="note-textarea" placeholder="Start typing your notes here...&#10;&#10;Tip: You can paste text from AI responses and save them here!"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- === SCHEDULE VIEW === -->
+            <section id="schedule-view" class="view hidden-view">
+                <div class="view-header-bar">
+                    <div>
+                        <h1><i class="fa-solid fa-calendar-days"></i> Study Schedule</h1>
+                        <p>Plan and track your daily study sessions.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-primary" id="btn-add-session" onclick="openSessionModal()">
+                            <i class="fa-solid fa-plus"></i> Add Session
+                        </button>
+                    </div>
+                </div>
+
+                <div class="schedule-layout">
+                    <!-- Week Calendar Header -->
+                    <div class="week-nav">
+                        <button class="btn-secondary" onclick="changeWeek(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                        <span id="week-label" class="week-label">This Week</span>
+                        <button class="btn-secondary" onclick="changeWeek(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <div class="week-grid" id="week-grid"></div>
+
+                    <!-- Session List -->
+                    <div class="sessions-panel">
+                        <h3><i class="fa-solid fa-list-check"></i> All Sessions</h3>
+                        <div class="sessions-list" id="sessions-list">
+                            <p class="empty-state">No study sessions yet. Add your first session!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Session Modal -->
+                <div class="modal-overlay hidden" id="session-modal">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3>Add Study Session</h3>
+                            <button onclick="closeSessionModal()"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <form id="session-form" onsubmit="saveSession(event)">
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <input type="text" id="sess-subject" placeholder="e.g. Mathematics" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Topic</label>
+                                <input type="text" id="sess-topic" placeholder="e.g. Algebra Chapter 5">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Date</label>
+                                    <input type="date" id="sess-date" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Time</label>
+                                    <input type="time" id="sess-time" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Duration (min)</label>
+                                    <input type="number" id="sess-duration" value="60" min="15">
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn-secondary" onclick="closeSessionModal()">Cancel</button>
+                                <button type="submit" class="btn-primary">Save Session</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- === STREAK VIEW === -->
+            <section id="streak-view" class="view hidden-view">
+                <div class="view-header-bar">
+                    <div>
+                        <h1><i class="fa-solid fa-fire"></i> Study Streaks</h1>
+                        <p>Track your consistency and stay motivated.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-primary" onclick="markTodayStudied()"><i class="fa-solid fa-check"></i> Mark Today as Studied</button>
+                    </div>
+                </div>
+
+                <div class="streak-layout">
+                    <!-- Streak Hero -->
+                    <div class="streak-hero">
+                        <div class="streak-flame-big">🔥</div>
+                        <div class="streak-big-number" id="streak-hero-number">0</div>
+                        <div class="streak-big-label">Day Streak</div>
+                        <div class="streak-meta">
+                            <div class="streak-meta-item">
+                                <span class="meta-val" id="streak-best">0</span>
+                                <span class="meta-label">Best Streak</span>
+                            </div>
+                            <div class="streak-meta-item">
+                                <span class="meta-val" id="streak-total">0</span>
+                                <span class="meta-label">Total Days</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Year Calendar Heatmap -->
+                    <div class="streak-calendar-panel">
+                        <h3>Activity This Month</h3>
+                        <div class="heatmap-grid" id="heatmap-grid"></div>
+                        <div class="heatmap-legend">
+                            <span>Less</span>
+                            <div class="legend-cell l0"></div>
+                            <div class="legend-cell l1"></div>
+                            <div class="legend-cell l2"></div>
+                            <div class="legend-cell l3"></div>
+                            <span>More</span>
+                        </div>
+                    </div>
+
+                    <!-- Achievements -->
+                    <div class="achievements-panel">
+                        <h3>Achievements</h3>
+                        <div class="achievements-grid" id="achievements-grid"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- === SOCIAL VIEW (FRIENDS & GROUPS) === -->
+            <section id="social-view" class="view hidden-view">
+                <div class="social-layout">
+                    <!-- Left Sidebar: Friends & Groups -->
+                    <div class="social-sidebar">
+                        <div class="social-sidebar-header">
+                            <h3><i class="fa-solid fa-users"></i> Network</h3>
+                            <div class="social-actions">
+                                <button class="btn-icon" onclick="openAddFriendModal()" title="Add Friend"><i class="fa-solid fa-user-plus"></i></button>
+                                <button class="btn-icon" onclick="openCreateGroupModal()" title="Create Group"><i class="fa-solid fa-layer-group"></i></button>
+                            </div>
+                        </div>
+                        
+                        <div class="social-list-section">
+                            <div class="social-list-title">STUDY GROUPS</div>
+                            <div id="groups-list" class="social-list"></div>
+                        </div>
+
+                        <div class="social-list-section">
+                            <div class="social-list-title">DIRECT MESSAGES</div>
+                            <div id="friends-list" class="social-list"></div>
+                        </div>
+                        
+                        <div class="social-list-section">
+                            <div class="social-list-title">FRIEND REQUESTS</div>
+                            <div id="friend-requests-list" class="social-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right Area: Chat Window -->
+                    <div class="social-chat-area">
+                        <div id="chat-placeholder" class="chat-placeholder">
+                            <i class="fa-solid fa-comments"></i>
+                            <p>Select a friend or group to start chatting</p>
+                        </div>
+                        
+                        <div id="chat-active" class="chat-active hidden">
+                            <div class="chat-header">
+                                <h3 id="chat-header-title">Group Name</h3>
+                                <div class="chat-header-actions">
+                                    <button class="btn-secondary" id="btn-invite-friend" onclick="openInviteModal()" style="display:none;"><i class="fa-solid fa-user-plus"></i> Invite</button>
+                                </div>
+                            </div>
+                            
+                            <div class="chat-messages-container" id="social-chat-messages">
+                                <!-- Messages load here -->
+                            </div>
+                            
+                            <div class="chat-input-container">
+                                <div class="chat-ai-hint">🐒 Use <strong>@monky</strong> to ask the AI for help, notes, or quizzes!</div>
+                                <form id="social-chat-form" onsubmit="sendSocialMessage(event)">
+                                    <textarea id="social-chat-input" placeholder="Type a message... (Shift+Enter for new line)" rows="1" required></textarea>
+                                    <button type="submit" id="social-send-btn">
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modals for Social -->
+                <!-- Add Friend -->
+                <div class="modal-overlay hidden" id="add-friend-modal">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3>Add Friend</h3>
+                            <button onclick="closeModal('add-friend-modal')"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div class="form-group">
+                            <label>Friend's Email</label>
+                            <input type="email" id="add-friend-email" placeholder="friend@example.com">
+                        </div>
+                        <button class="btn-primary" onclick="sendFriendRequest()">Send Request</button>
+                    </div>
+                </div>
+
+                <!-- Create Group -->
+                <div class="modal-overlay hidden" id="create-group-modal">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3>Create Study Group</h3>
+                            <button onclick="closeModal('create-group-modal')"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div class="form-group">
+                            <label>Group Name</label>
+                            <input type="text" id="create-group-name" placeholder="e.g. CS101 Study Group">
+                        </div>
+                        <button class="btn-primary" onclick="createStudyGroup()">Create Group</button>
+                    </div>
+                </div>
+                
+                <!-- Invite to Group -->
+                <div class="modal-overlay hidden" id="invite-group-modal">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3>Invite to Group</h3>
+                            <button onclick="closeModal('invite-group-modal')"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div class="form-group">
+                            <label>Select Friend</label>
+                            <select id="invite-friend-select"></select>
+                        </div>
+                        <button class="btn-primary" onclick="inviteFriendToGroup()">Invite</button>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- === QUIZ TAKING VIEW === -->
+            <section id="quiz-taking-view" class="view hidden-view">
+                <div class="view-header-bar">
+                    <div>
+                        <h1><i class="fa-solid fa-graduation-cap"></i> Quiz Mode</h1>
+                        <p id="quiz-taking-title">Testing your knowledge...</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-secondary" onclick="navigate('turbo-view', document.querySelector('[data-view=turbo-view]'))">
+                            <i class="fa-solid fa-times"></i> Exit Quiz
+                        </button>
+                    </div>
+                </div>
+
+                <div class="quiz-taking-container" style="max-width: 800px; margin: 0 auto; padding: 20px;">
+                    <!-- Question Mode -->
+                    <div id="quiz-active-area">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <span id="qt-progress" style="font-weight: 600; color: var(--accent);">Question 1 of 5</span>
+                            <button id="qt-btn-hint" class="btn-secondary" onclick="showQuizHint()" style="font-size: 0.8rem; padding: 5px 10px;">
+                                💡 Need a Hint?
+                            </button>
+                        </div>
+                        
+                        <div id="qt-hint-box" class="hidden" style="background: rgba(243,156,18,0.1); border-left: 4px solid var(--accent); padding: 10px 15px; margin-bottom: 20px; border-radius: 4px; color: var(--text-dim); font-size: 0.9rem;">
+                            <!-- Hint goes here -->
+                        </div>
+
+                        <h2 id="qt-question" style="font-size: 1.4rem; margin-bottom: 30px; line-height: 1.4;">Question text goes here</h2>
+
+                        <div id="qt-options" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px;">
+                            <!-- Options go here -->
+                        </div>
+
+                        <div id="qt-explanation-box" class="hidden" style="background: var(--surface-light); border: 1px solid var(--border); padding: 20px; border-radius: var(--radius); margin-bottom: 30px;">
+                            <h4 style="margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-book-open" style="color: var(--accent);"></i> Explanation
+                            </h4>
+                            <p id="qt-explanation-text" style="color: var(--text-dim); line-height: 1.5;"></p>
+                        </div>
+
+                        <div style="text-align: right;">
+                            <button id="qt-btn-next" class="btn-primary hidden" onclick="nextQuizQuestion()">
+                                Next Question <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Results Mode -->
+                    <div id="quiz-results-area" class="hidden" style="text-align: center; padding: 40px 20px;">
+                        <i class="fa-solid fa-trophy" style="font-size: 4rem; color: var(--accent); margin-bottom: 20px;"></i>
+                        <h2 style="font-size: 2rem; margin-bottom: 10px;">Quiz Complete!</h2>
+                        <p id="qt-final-score" style="font-size: 1.2rem; color: var(--text-dim); margin-bottom: 30px;">You scored X out of Y (Z%)</p>
+                        <button class="btn-primary" onclick="navigate('turbo-view', document.querySelector('[data-view=turbo-view]'))">
+                            <i class="fa-solid fa-rotate-left"></i> Generate Another Quiz
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

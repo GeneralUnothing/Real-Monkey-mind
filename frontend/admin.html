@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonkeyMind | Developer Interface</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #060608;
+            --surface: #121216;
+            --surface-light: #1e1e24;
+            --accent: #00f2ff;
+            --accent-glow: rgba(0, 242, 255, 0.3);
+            --danger: #ff3366;
+            --text: #e0e0e6;
+            --text-dim: #80808a;
+            --border: rgba(255, 255, 255, 0.08);
+            --glass: rgba(255, 255, 255, 0.03);
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Animated Background Gradient */
+        .bg-glow {
+            position: fixed;
+            top: -20%;
+            left: -10%;
+            width: 50%;
+            height: 60%;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            z-index: -1;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: drift 20s infinite alternate ease-in-out;
+        }
+
+        @keyframes drift {
+            from { transform: translate(0, 0); }
+            to { transform: translate(20%, 20%); }
+        }
+
+        /* Login Overlay */
+        #login-overlay {
+            position: fixed; inset: 0; background: var(--bg);
+            display: flex; align-items: center; justify-content: center; z-index: 100;
+        }
+        .login-box {
+            background: var(--surface); padding: 40px; border-radius: 20px;
+            border: 1px solid var(--border); width: 380px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 40px var(--accent-glow);
+            text-align: center;
+        }
+        .login-box h2 { font-weight: 600; margin-bottom: 24px; color: var(--accent); }
+        .input-field {
+            width: 100%; background: var(--bg); border: 1px solid var(--border);
+            color: var(--text); padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;
+            font-family: 'JetBrains Mono', monospace; outline: none; transition: 0.2s;
+        }
+        .input-field:focus { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+        .btn {
+            width: 100%; background: var(--accent); color: #000; font-weight: 600;
+            padding: 12px; border: none; border-radius: 8px; cursor: pointer;
+            transition: 0.2s; font-family: 'Outfit', sans-serif; font-size: 1rem;
+        }
+        .btn:hover { box-shadow: 0 0 15px var(--accent-glow); transform: translateY(-2px); }
+        .btn-danger { background: rgba(255, 51, 102, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: white; box-shadow: 0 0 15px rgba(255,51,102,0.4); }
+        .btn-sm { padding: 6px 12px; font-size: 0.85rem; width: auto; display: inline-block; }
+
+        /* Main Layout */
+        #app-layout { display: none; height: 100vh; flex-direction: column; }
+        
+        /* Top Navbar */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px; background: rgba(18, 18, 22, 0.8);
+            backdrop-filter: blur(10px); border-bottom: 1px solid var(--border);
+        }
+        .brand { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 1.2rem; }
+        .brand i { color: var(--accent); }
+        .nav-tabs { display: flex; gap: 10px; }
+        .nav-tab {
+            background: transparent; color: var(--text-dim); border: none;
+            padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;
+            transition: 0.2s;
+        }
+        .nav-tab.active { background: var(--glass); color: var(--accent); }
+        .nav-tab:hover:not(.active) { color: var(--text); background: var(--glass); }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex; gap: 24px; padding: 12px 24px; background: var(--surface);
+            border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem; color: var(--text-dim);
+        }
+        .stat span { color: var(--accent); font-weight: bold; }
+
+        /* Content Area */
+        .content { flex: 1; overflow: hidden; display: flex; position: relative; }
+        
+        .view-panel {
+            display: none; width: 100%; height: 100%; overflow-y: auto; padding: 24px;
+        }
+        .view-panel.active { display: block; }
+
+        /* Panel UI Elements */
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px; margin-bottom: 24px;
+        }
+        .card-header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .card-title i { color: var(--accent); }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { color: var(--text-dim); font-weight: 600; text-transform: uppercase; font-size: 0.8rem; }
+        tr:hover td { background: var(--glass); }
+        .badge {
+            padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;
+        }
+        .badge-active { background: rgba(0,242,255,0.1); color: var(--accent); }
+        .badge-banned { background: rgba(255,51,102,0.1); color: var(--danger); }
+
+        /* Form Grid */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; }
+
+        /* File Editor Layout */
+        .editor-layout { display: flex; width: 100%; height: 100%; padding: 0; }
+        .sidebar { width: 280px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .file-browser { flex: 1; overflow-y: auto; padding: 10px; }
+        .file-item {
+            padding: 8px 12px; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 8px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-dim);
+            transition: 0.2s; margin-bottom: 2px;
+        }
+        .file-item:hover, .file-item.active { background: var(--glass); color: var(--text); }
+        .file-item i.fa-folder { color: #ffd700; }
+        .file-item i.fa-file { color: #a0a0a0; }
+        .editor-container { flex: 1; display: flex; flex-direction: column; background: var(--bg); }
+        .editor-header {
+            padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; font-family: 'JetBrains Mono', monospace;
+        }
+        #code-editor {
+            flex: 1; background: var(--bg); color: #a9b7c6; padding: 20px; font-family: 'JetBrains Mono', monospace;
+            font-size: 14px; border: none; outline: none; resize: none; line-height: 1.5; white-space: pre; overflow: auto;
+        }
+        .path-nav { padding: 10px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; }
+        .path-nav input { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; border-radius: 4px; font-family: 'JetBrains Mono'; font-size: 12px; }
+
+        /* Terminal UI */
+        .terminal-container { flex: 1; display: flex; flex-direction: column; background: #000; padding: 20px; font-family: 'JetBrains Mono', monospace; overflow: hidden; border-radius: 8px; border: 1px solid var(--border); }
+        .terminal-output { flex: 1; overflow-y: auto; color: #0f0; font-size: 14px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.5; margin-bottom: 10px; }
+        .terminal-input-row { display: flex; align-items: center; gap: 10px; }
+        .terminal-prompt { color: #0f0; font-size: 14px; }
+        .terminal-input { flex: 1; background: transparent; border: none; color: #0f0; font-family: 'JetBrains Mono', monospace; font-size: 14px; outline: none; }
+        
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); }
+        .modal { background: var(--surface); width: 600px; max-width: 90%; max-height: 90vh; border-radius: var(--radius); border: 1px solid var(--border); display: flex; flex-direction: column; }
+        .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.2rem; color: var(--accent); margin: 0; }
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+        .modal-close { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1.2rem; }
+        .modal-close:hover { color: var(--text); }
+        .user-detail-section { margin-bottom: 20px; }
+        .user-detail-section h4 { border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 10px; color: var(--text-dim); }
+        .user-detail-list { list-style: none; padding: 0; }
+        .user-detail-list li { padding: 5px 0; font-size: 0.9rem; }
+
+
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+
+    <!-- Login -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2><i class="fa-solid fa-terminal"></i> Dev Terminal</h2>
+            <input type="text" id="admin-user" class="input-field" placeholder="Username" value="Nameless_General">
+            <input type="password" id="admin-pass" class="input-field" placeholder="Password">
+            <button class="btn" onclick="login()">Initialize System</button>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-layout">
+        <div class="navbar">
+            <div class="brand"><i class="fa-solid fa-shield-halved"></i> MonkeyMind Admin</div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="switchTab('tab-users')"><i class="fa-solid fa-users"></i> Users</button>
+                <button class="nav-tab" onclick="switchTab('tab-groups')"><i class="fa-solid fa-layer-group"></i> Groups</button>
+                <button class="nav-tab" onclick="switchTab('tab-site')"><i class="fa-solid fa-palette"></i> Site Config</button>
+                <button class="nav-tab" onclick="switchTab('tab-editor')"><i class="fa-solid fa-code"></i> Code</button>
+                <button class="nav-tab" onclick="switchTab('tab-terminal')"><i class="fa-solid fa-terminal"></i> Terminal</button>
+            </div>
+            <button class="btn btn-sm btn-danger" onclick="logout()"><i class="fa-solid fa-power-off"></i> Exit</button>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat"><i class="fa-solid fa-microchip"></i> CPU: <span id="stat-cpu">0%</span></div>
+            <div class="stat"><i class="fa-solid fa-memory"></i> RAM: <span id="stat-mem">0%</span></div>
+            <div class="stat"><i class="fa-solid fa-hard-drive"></i> Disk: <span id="stat-disk">0%</span></div>
+            <div class="stat"><i class="fa-solid fa-clock"></i> Uptime: <span id="stat-uptime">...</span></div>
+        </div>
+
+        <div class="content">
+            <!-- Users Tab -->
+            <div id="tab-users" class="view-panel active">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-users"></i> Active Users</div>
+                        <button class="btn btn-sm" onclick="loadUsers()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Stats (Friends/Groups/Msgs)</th>
+                                <th>Status</th>
+                                <th style="text-align: right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Groups Tab -->
+            <div id="tab-groups" class="view-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-layer-group"></i> Study Groups</div>
+                        <button class="btn btn-sm" onclick="loadGroups()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Group Name</th>
+                                <th>Members</th>
+                                <th>Total Messages</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody id="groups-table-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Site Config Tab -->
+            <div id="tab-site" class="view-panel">
+                <div class="card" style="max-width: 800px; margin: 0 auto;">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-palette"></i> Site Appearance Editor</div>
+                        <button class="btn btn-sm" onclick="saveSiteConfig()"><i class="fa-solid fa-floppy-disk"></i> Save Config</button>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Site Title</label>
+                            <input type="text" id="cfg-title" class="input-field" placeholder="MonkeyMind AI">
+                        </div>
+                        <div class="form-group">
+                            <label>Logo Emoji</label>
+                            <input type="text" id="cfg-emoji" class="input-field" placeholder="🐒">
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Tagline</label>
+                            <input type="text" id="cfg-tagline" class="input-field" placeholder="Your intelligent study companion">
+                        </div>
+                        <div class="form-group">
+                            <label>Accent Color</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="color" id="cfg-color" class="input-field" style="width: 60px; padding: 5px;">
+                                <input type="text" id="cfg-color-hex" class="input-field" placeholder="#ffffff" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Global Announcement Banner (Leave empty to disable)</label>
+                            <input type="text" id="cfg-announcement" class="input-field" placeholder="e.g. Server maintenance tonight!">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code Editor Tab -->
+            <div id="tab-editor" class="view-panel" style="padding: 0;">
+                <div class="editor-layout">
+                    <div class="sidebar">
+                        <div class="path-nav">
+                            <button class="btn btn-sm" style="width:auto" onclick="goUp()"><i class="fa-solid fa-arrow-up"></i></button>
+                            <input type="text" id="current-path" value="." onchange="loadFiles(this.value)">
+                        </div>
+                        <div class="file-browser" id="file-list"></div>
+                    </div>
+                    <div class="editor-container">
+                        <div class="editor-header">
+                            <span id="editing-file"><i class="fa-solid fa-file-code"></i> No file selected</span>
+                            <button class="btn btn-sm" style="width: 120px;" onclick="saveFile()"><i class="fa-solid fa-floppy-disk"></i> Save File</button>
+                        </div>
+                        <textarea id="code-editor" spellcheck="false" placeholder="Select a file to edit..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal Tab -->
+            <div id="tab-terminal" class="view-panel" style="padding: 24px; height: 100%;">
+                <div class="terminal-container">
+                    <div class="terminal-output" id="terminal-output">MonkeyMind Admin Shell v1.0.0
+Type a command and press Enter.
+</div>
+                    <div class="terminal-input-row">
+                        <span class="terminal-prompt">admin@monkeymind:~$</span>
+                        <input type="text" id="terminal-input" class="terminal-input" placeholder="" autocomplete="off" spellcheck="false" onkeydown="handleTerminalInput(event)">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Details Modal -->
+    <div id="user-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-user"></i> User Details</h3>
+                <button class="modal-close" onclick="document.getElementById('user-modal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" id="user-modal-body">
+                <!-- Content goes here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let adminToken = null;
+        let currentFilePath = null;
+
+        // --- Auth ---
+        async function login() {
+            const u = document.getElementById('admin-user').value;
+            const p = document.getElementById('admin-pass').value;
+            try {
+                const res = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username: u, password: p})
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    adminToken = data.token;
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.getElementById('app-layout').style.display = 'flex';
+                    initSystem();
+                } else {
+                    alert('Access Denied');
+                }
+            } catch (e) {
+                alert('Connection Error');
+            }
+        }
+
+        function logout() {
+            adminToken = null;
+            document.getElementById('login-overlay').style.display = 'flex';
+            document.getElementById('app-layout').style.display = 'none';
+        }
+
+        // --- Init & UI ---
+        function initSystem() {
+            startStatsPolling();
+            loadUsers();
+            loadGroups();
+            loadSiteConfig();
+            loadFiles('.');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // --- Stats ---
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/admin/stats');
+                const data = await res.json();
+                document.getElementById('stat-cpu').textContent = data.cpu + '%';
+                document.getElementById('stat-mem').textContent = data.memory + '%';
+                document.getElementById('stat-disk').textContent = data.disk + '%';
+                document.getElementById('stat-uptime').textContent = data.uptime.split(' ')[1];
+            } catch(e) {}
+        }
+        function startStatsPolling() {
+            fetchStats();
+            setInterval(fetchStats, 5000);
+        }
+
+        // --- Users & Groups Management ---
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/admin/users');
+                const data = await res.json();
+                const tbody = document.getElementById('users-table-body');
+                tbody.innerHTML = '';
+                
+                if (data.users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-dim)">No users found</td></tr>';
+                    return;
+                }
+
+                data.users.forEach(u => {
+                    const statusBadge = u.banned ? '<span class="badge badge-banned">Banned</span>' : '<span class="badge badge-active">Active</span>';
+                    const banAction = u.banned ? 'unban' : 'ban';
+                    const banText = u.banned ? 'Unban' : 'Ban';
+                    const banClass = u.banned ? 'btn' : 'btn-danger';
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${u.name}</strong></td>
+                            <td style="font-family: monospace; color: var(--text-dim)">${u.email}</td>
+                            <td>${u.friend_count} / ${u.group_count} / ${u.message_count}</td>
+                            <td>${statusBadge}</td>
+                            <td style="text-align: right">
+                                <button class="btn btn-sm" style="background:var(--surface-light); color:var(--text)" onclick="viewUserDetails('${u.id}')"><i class="fa-solid fa-eye"></i> Info</button>
+                                <button class="btn btn-sm ${banClass}" onclick="toggleBan('${u.id}', '${banAction}')">${banText}</button>
+                                <button class="btn btn-sm btn-danger" onclick="kickFromEverywhere('${u.id}')" title="Remove from all groups and friends"><i class="fa-solid fa-user-ninja"></i> Kick</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch(e) {
+                console.error("Failed to load users", e);
+            }
+        }
+
+        async function toggleBan(userId, action) {
+            try {
+                await fetch(`/api/admin/users/${action}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_id: userId})
+                });
+                loadUsers(); // Refresh
+            } catch(e) {
+                alert('Action failed');
+            }
+        }
+
+        async function kickFromEverywhere(userId) {
+            if (!confirm('Are you sure you want to remove this user from ALL groups and friendships?')) return;
+            try {
+                const res = await fetch(`/api/admin/users/kick`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_id: userId})
+                });
+                const data = await res.json();
+                alert(`User kicked successfully. Items removed: ${data.kicked_from.length}`);
+                loadUsers();
+                loadGroups();
+            } catch(e) {
+                alert('Action failed');
+            }
+        }
+
+        async function loadGroups() {
+            try {
+                const res = await fetch('/api/admin/groups');
+                const data = await res.json();
+                const tbody = document.getElementById('groups-table-body');
+                tbody.innerHTML = '';
+                
+                if (data.groups.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--text-dim)">No groups found</td></tr>';
+                    return;
+                }
+
+                data.groups.forEach(g => {
+                    const date = new Date(g.created_at).toLocaleDateString();
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${g.name}</strong><br><small style="color:var(--text-dim)">ID: ${g.id}</small></td>
+                            <td>${g.member_count} members</td>
+                            <td>${g.message_count} msgs</td>
+                            <td>${date}</td>
+                        </tr>
+                    `;
+                });
+            } catch(e) {}
+        }
+
+        // --- Site Config ---
+        async function loadSiteConfig() {
+            try {
+                const res = await fetch('/api/admin/site-config');
+                const cfg = await res.json();
+                document.getElementById('cfg-title').value = cfg.site_title || '';
+                document.getElementById('cfg-tagline').value = cfg.tagline || '';
+                document.getElementById('cfg-emoji').value = cfg.logo_emoji || '';
+                document.getElementById('cfg-color').value = cfg.accent_color || '#ffffff';
+                document.getElementById('cfg-color-hex').value = cfg.accent_color || '#ffffff';
+                document.getElementById('cfg-announcement').value = cfg.announcement || '';
+                
+                // Sync color input
+                document.getElementById('cfg-color').addEventListener('input', (e) => {
+                    document.getElementById('cfg-color-hex').value = e.target.value;
+                });
+            } catch(e) {}
+        }
+
+        async function saveSiteConfig() {
+            const cfg = {
+                site_title: document.getElementById('cfg-title').value,
+                tagline: document.getElementById('cfg-tagline').value,
+                logo_emoji: document.getElementById('cfg-emoji').value,
+                accent_color: document.getElementById('cfg-color').value,
+                announcement: document.getElementById('cfg-announcement').value,
+                announcement_enabled: document.getElementById('cfg-announcement').value.trim() !== ''
+            };
+            try {
+                await fetch('/api/admin/site-config', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(cfg)
+                });
+                alert('Site Configuration Saved Successfully!\nChanges will reflect in the main app on reload.');
+            } catch(e) {
+                alert('Failed to save config');
+            }
+        }
+
+        // --- File Editor ---
+        async function loadFiles(path) {
+            const res = await fetch(`/api/admin/files?path=${encodeURIComponent(path)}`);
+            const data = await res.json();
+            document.getElementById('current-path').value = data.current_path;
+            
+            const list = document.getElementById('file-list');
+            list.innerHTML = '';
+            
+            // Sort: dirs first
+            data.items.sort((a,b) => {
+                if(a.isDir && !b.isDir) return -1;
+                if(!a.isDir && b.isDir) return 1;
+                return a.name.localeCompare(b.name);
+            });
+
+            data.items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.innerHTML = `<i class="fa-solid ${item.isDir ? 'fa-folder' : 'fa-file'}"></i> ${item.name}`;
+                div.onclick = () => {
+                    if(item.isDir) {
+                        loadFiles(item.path);
+                    } else {
+                        document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
+                        div.classList.add('active');
+                        openFile(item.path);
+                    }
+                };
+                list.appendChild(div);
+            });
+        }
+
+        function goUp() {
+            const current = document.getElementById('current-path').value;
+            const parts = current.split(/[\\/]/);
+            if(parts.length > 1) {
+                parts.pop();
+                loadFiles(parts.join('/'));
+            } else {
+                loadFiles('..');
+            }
+        }
+
+        async function openFile(path) {
+            try {
+                currentFilePath = path;
+                const parts = path.split(/[\\/]/);
+                document.getElementById('editing-file').innerHTML = `<i class="fa-solid fa-file-code"></i> ${parts[parts.length-1]}`;
+                
+                const res = await fetch(`/api/admin/file/content?path=${encodeURIComponent(path)}`);
+                const data = await res.json();
+                document.getElementById('code-editor').value = data.content;
+            } catch(e) {
+                alert("Failed to read file. It might be binary.");
+            }
+        }
+
+        async function saveFile() {
+            if(!currentFilePath) return;
+            const content = document.getElementById('code-editor').value;
+            try {
+                const res = await fetch('/api/admin/file/save', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({path: currentFilePath, content: content})
+                });
+                if(res.ok) alert('File Saved!');
+                else alert('Save failed');
+            } catch(e) {
+                alert('Save failed');
+            }
+        }
+
+        // --- Terminal ---
+        async function handleTerminalInput(e) {
+            if (e.key === 'Enter') {
+                const cmd = e.target.value.trim();
+                if (!cmd) return;
+                
+                const outDiv = document.getElementById('terminal-output');
+                outDiv.textContent += `\nadmin@monkeymind:~$ ${cmd}\n`;
+                e.target.value = '';
+                e.target.disabled = true;
+                
+                try {
+                    const res = await fetch('/api/admin/terminal', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({command: cmd})
+                    });
+                    const data = await res.json();
+                    outDiv.textContent += data.output;
+                } catch(err) {
+                    outDiv.textContent += 'Error connecting to terminal endpoint.\n';
+                }
+                
+                e.target.disabled = false;
+                e.target.focus();
+                outDiv.scrollTop = outDiv.scrollHeight;
+            }
+        }
+
+        // --- User Details Modal ---
+        async function viewUserDetails(userId) {
+            try {
+                const res = await fetch(`/api/admin/users/${userId}/details`);
+                if(!res.ok) { alert('Failed to load user details'); return; }
+                const data = await res.json();
+                
+                const mBody = document.getElementById('user-modal-body');
+                
+                let friendsHtml = data.friends.length === 0 ? '<p style="color:var(--text-dim)">No friends</p>' : 
+                    '<ul class="user-detail-list">' + data.friends.map(f => `<li><i class="fa-solid fa-user-group"></i> ${f.name}</li>`).join('') + '</ul>';
+                    
+                let groupsHtml = data.groups.length === 0 ? '<p style="color:var(--text-dim)">No groups</p>' : 
+                    '<ul class="user-detail-list">' + data.groups.map(g => `<li><i class="fa-solid fa-layer-group"></i> ${g.name}</li>`).join('') + '</ul>';
+
+                mBody.innerHTML = `
+                    <div class="user-detail-section">
+                        <h4>Profile</h4>
+                        <p><strong>ID:</strong> ${data.info.id}</p>
+                        <p><strong>Name:</strong> ${data.info.name}</p>
+                        <p><strong>Email:</strong> ${data.info.email}</p>
+                        <p><strong>Status:</strong> ${data.banned ? '<span style="color:var(--danger)">Banned</span>' : '<span style="color:var(--accent)">Active</span>'}</p>
+                    </div>
+                    <div class="user-detail-section">
+                        <h4>Friends (${data.friends.length})</h4>
+                        ${friendsHtml}
+                    </div>
+                    <div class="user-detail-section">
+                        <h4>Study Groups (${data.groups.length})</h4>
+                        ${groupsHtml}
+                    </div>
+                `;
+                
+                document.getElementById('user-modal').style.display = 'flex';
+            } catch(e) {
+                alert('Error fetching user details');
+            }
+        }
+    </script>
+</body>
+</html>
