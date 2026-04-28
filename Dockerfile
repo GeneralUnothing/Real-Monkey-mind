@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN addgroup --system app && adduser --system --ingroup app app
 
 WORKDIR /app
+ENV PYTHONPATH=/app
 
 # ── Python dependencies (own layer for caching) ───────────────────────────────
 COPY requirements.txt .

@@ -6,11 +6,23 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 import sys
+
+# Ensure the current directory is at the front of the path
+# This fixes "ModuleNotFoundError: No module named 'app'" on platforms like Render
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+# Debug: Print path and contents if running in a container
+if os.environ.get("RENDER") or os.environ.get("DOCKER"):
+    print(f"DEBUG: BASE_DIR={BASE_DIR}")
+    print(f"DEBUG: sys.path={sys.path}")
+    try:
+        print(f"DEBUG: Contents of {BASE_DIR}: {os.listdir(BASE_DIR)}")
+    except Exception as e:
+        print(f"DEBUG: Could not list dir: {e}")
+
 from dotenv import load_dotenv
-
-# Ensure the current directory is in the path so 'app' module can be found
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 load_dotenv()
 
 # Import your actual route files (not ml.router)
