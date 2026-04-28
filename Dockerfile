@@ -8,21 +8,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Non-root user ─────────────────────────────────────────────────────────────
-RUN addgroup --system app && adduser --system --ingroup app app
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
-WORKDIR /app
-ENV PYTHONPATH=/app
+WORKDIR /project
+
+ENV PYTHONPATH=/project
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 # ── Python dependencies (own layer for caching) ───────────────────────────────
-COPY requirements.txt .
+COPY requirements.txt pyproject.toml ./
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir -e .
 
 # ── Application source ────────────────────────────────────────────────────────
-COPY --chown=app:app . .
+COPY --chown=appuser:appgroup . .
+
+# Verify the app package is importable (fail loudly if not)
+RUN python -c "from app.routes import ai, flashcards, admin; print('Package check OK')"
 
 # ── Runtime ───────────────────────────────────────────────────────────────────
-USER app
+USER appuser
 
 EXPOSE 8000
 
@@ -30,6 +37,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Use $PORT env-var so the image works on cloud platforms (Railway, Render, etc.)
-# Fall back to 8000 if unset.
 CMD ["sh", "-c", \
      "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]
