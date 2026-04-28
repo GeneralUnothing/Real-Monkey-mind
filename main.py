@@ -7,28 +7,41 @@ from fastapi.responses import FileResponse
 import os
 import sys
 
+# --- DIAGNOSTIC LOGGING (Visible on Render) ---
+print("--- MONKEYMIND DEBUG START ---")
+print(f"Current Working Directory: {os.getcwd()}")
+print(f"System Path: {sys.path}")
+try:
+    print(f"Root Directory Contents: {os.listdir(os.getcwd())}")
+    if os.path.exists("app"):
+        print(f"App Directory Contents: {os.listdir('app')}")
+except Exception as e:
+    print(f"Debug Error: {e}")
+print("--- MONKEYMIND DEBUG END ---")
+
 # Ensure the current directory is at the front of the path
-# This fixes "ModuleNotFoundError: No module named 'app'" on platforms like Render
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-# Debug: Print path and contents if running in a container
-if os.environ.get("RENDER") or os.environ.get("DOCKER"):
-    print(f"DEBUG: BASE_DIR={BASE_DIR}")
-    print(f"DEBUG: sys.path={sys.path}")
-    try:
-        print(f"DEBUG: Contents of {BASE_DIR}: {os.listdir(BASE_DIR)}")
-    except Exception as e:
-        print(f"DEBUG: Could not list dir: {e}")
-
 from dotenv import load_dotenv
 load_dotenv()
 
-# Import your actual route files (not ml.router)
-from app.routes import ai, flashcards, admin
-from app.routes.turbolearn import router as turbolearn_router
-from app.routes.social import router as social_router
+# Import your actual route files
+try:
+    from app.routes import ai, flashcards, admin
+    from app.routes.turbolearn import router as turbolearn_router
+    from app.routes.social import router as social_router
+except ImportError as e:
+    print(f"CRITICAL: Failed to import routes from 'app.routes': {e}")
+    print("Attempting fallback imports (no 'app.' prefix)...")
+    try:
+        from routes import ai, flashcards, admin
+        from routes.turbolearn import router as turbolearn_router
+        from routes.social import router as social_router
+    except ImportError as e2:
+        print(f"CRITICAL: Fallback imports also failed: {e2}")
+        raise e
 
 # Try to import database, but don't fail if not available
 try:
